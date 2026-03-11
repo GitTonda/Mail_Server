@@ -43,4 +43,9 @@ public class Server_Model
             append_Log ("Server stopped.");
         }
     }
+
+    public Storage_Manager get_Storage_manager ()
+    {
+        return storage_manager;
+    }
 }
