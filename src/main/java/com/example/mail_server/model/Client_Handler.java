@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Client_Handler implements Runnable
@@ -25,14 +26,6 @@ public class Client_Handler implements Runnable
 
     private Package send_email (Package pkg)
     {
-        /*
-         EXPECTED PKG DATA
-            type = SEND_EMAIL
-            user = sender
-            email = email to send
-            email_list = null
-            message = null
-         */
         Email email = pkg.email ();
         Storage_Manager sm = model.get_Storage_manager ();
         List <String> users = sm.get_Users ().stream ().map (User :: username).toList ();
@@ -62,25 +55,33 @@ public class Client_Handler implements Runnable
 
     private Package request_inbox (Package pkg)
     {
-        /*
-         EXPECTED PKG DATA
-            type = REQUEST_INBOX
-            user = user requesting own inbox
-            email = null
-            email_list = null
-            message = null // TODO maybe make it so we only get new mails
-         */
         Storage_Manager sm = model.get_Storage_manager ();
         List <String> users = sm.get_Users ().stream ().map (User :: username).toList ();
 
-        List <Email> emails = null;
-        if (users.contains (pkg.user ().username ()))
+        if (! users.contains (pkg.user ().username ()))
         {
-            emails = sm.load_Inbox (pkg.user ().username ());
-            model.append_Log ("Sending " + emails.size () + " new emails to " + pkg.user ().username ());
+            model.append_Log ("No user found for " + pkg.user ().username ());
+            return new Package (TYPE.ANSWER, pkg.user (), null, null, "ERR");
         }
-        else model.append_Log ("No user found for " + pkg.user ().username ());
-        return new Package (TYPE.ANSWER, pkg.user (), null, emails, emails == null ? "ERR" : "SUCCESS");
+
+        List <Email> allEmails = sm.load_Inbox (pkg.user ().username ());
+        List <Email> newEmails = new ArrayList <> ();
+        String lastKnownId = pkg.message ();
+
+        if (lastKnownId == null || lastKnownId.isEmpty ()) newEmails = allEmails;
+        else
+        {
+            boolean found = false;
+            for (Email email : allEmails)
+            {
+                if (found) newEmails.add (email);
+                else if (email.id ().equals (lastKnownId)) found = true;
+            }
+            if (! found) newEmails = allEmails;
+        }
+
+        model.append_Log ("Sending " + newEmails.size () + " new emails to " + pkg.user ().username ());
+        return new Package (TYPE.ANSWER, pkg.user (), null, newEmails, "SUCCESS");
     }
 
     private Package handle_request (Package pkg) throws IOException
