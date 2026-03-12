@@ -16,7 +16,7 @@ public class Server_Handler implements Runnable
     public Server_Handler (Server_Model server_model)
     {
         is_running = false;
-        this.model = server_model;
+        model = server_model;
         thread_pool = Executors.newCachedThreadPool ();
     }
 
@@ -26,20 +26,20 @@ public class Server_Handler implements Runnable
         if (is_running) return;
         is_running = true;
 
-        model.append_Log ("Server started");
+        model.append_Log ("[Server Started]");
         try (ServerSocket serverSocket = new ServerSocket (PORT))
         {
             while (is_running)
             {
                 Socket clientSocket = serverSocket.accept ();
-                model.append_Log ("New client connected: " + clientSocket.getInetAddress ());
+                model.append_Log ("[Client Connected] : " + clientSocket.getInetAddress ());
                 thread_pool.execute (new Client_Handler (clientSocket, model));
             }
         }
         catch (IOException e)
         {
-            if (is_running) System.err.println ("Server exception: " + e.getMessage ());
-            else System.out.println ("Server shut down successfully.");
+            if (is_running) System.err.println ("[Server Exception] : " + e.getMessage ());
+            else System.out.println ("[Server Shutdown]");
         }
     }
 }

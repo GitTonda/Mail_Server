@@ -8,14 +8,14 @@ import java.time.format.DateTimeFormatter;
 
 public class Server_Model
 {
-    private final StringProperty latest_Log;
-    private Storage_Manager storage_manager;
+    private final Storage_Manager storage_manager;
+    private final StringProperty log;
     private Thread server_thread;
 
     public Server_Model ()
     {
-        latest_Log = new SimpleStringProperty ("");
         storage_manager = new Storage_Manager ();
+        log = new SimpleStringProperty ("");
     }
 
     public void append_Log (String message)
@@ -25,9 +25,9 @@ public class Server_Model
         // Platform.runLater (() -> latest_Log.set (timestamp + " | " + message)); // TODO uncomment this for logs
     }
 
-    public StringProperty latest_Log_Property ()
+    public StringProperty get_Log ()
     {
-        return latest_Log;
+        return log;
     }
 
     public void start_Server ()
@@ -44,7 +44,7 @@ public class Server_Model
         }
     }
 
-    public Storage_Manager get_Storage_manager ()
+    public Storage_Manager get_Storage_Manager ()
     {
         return storage_manager;
     }

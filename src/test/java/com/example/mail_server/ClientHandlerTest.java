@@ -107,7 +107,7 @@ class ClientHandlerTest
         User u1 = new User (validUser1, "pass");
         User u2 = new User (validUser2, "pass");
         Email e1 = new Email ("1", u2, List.of (u1), "S1", "T1", LocalDateTime.now ());
-        serverModel.get_Storage_manager ().deliver_Email (validUser1, e1);
+        serverModel.get_Storage_Manager ().deliver_Email (validUser1, e1);
 
         Package req = new Package (TYPE.REQUEST_INBOX, u1, null, null, null);
         Package res = sendRequestAndGetResponse (req);
@@ -125,9 +125,9 @@ class ClientHandlerTest
         Email e1 = new Email ("id_1", u2, List.of (u1), "S1", "T1", LocalDateTime.now ());
         Email e2 = new Email ("id_2", u2, List.of (u1), "S2", "T2", LocalDateTime.now ());
         Email e3 = new Email ("id_3", u2, List.of (u1), "S3", "T3", LocalDateTime.now ());
-        serverModel.get_Storage_manager ().deliver_Email (validUser1, e1);
-        serverModel.get_Storage_manager ().deliver_Email (validUser1, e2);
-        serverModel.get_Storage_manager ().deliver_Email (validUser1, e3);
+        serverModel.get_Storage_Manager ().deliver_Email (validUser1, e1);
+        serverModel.get_Storage_Manager ().deliver_Email (validUser1, e2);
+        serverModel.get_Storage_Manager ().deliver_Email (validUser1, e3);
 
         Package req = new Package (TYPE.REQUEST_INBOX, u1, null, null, "id_2");
         Package res = sendRequestAndGetResponse (req);
@@ -143,7 +143,7 @@ class ClientHandlerTest
         User u1 = new User (validUser1, "pass");
         User u2 = new User (validUser2, "pass");
         Email e1 = new Email ("id_1", u2, List.of (u1), "S1", "T1", LocalDateTime.now ());
-        serverModel.get_Storage_manager ().deliver_Email (validUser1, e1);
+        serverModel.get_Storage_Manager ().deliver_Email (validUser1, e1);
 
         Package req = new Package (TYPE.REQUEST_INBOX, u1, null, null, "ghost_id");
         Package res = sendRequestAndGetResponse (req);
@@ -164,7 +164,7 @@ class ClientHandlerTest
 
         assertNotNull (res);
         assertEquals ("SUCCESS", res.message ());
-        assertEquals (1, serverModel.get_Storage_manager ().load_Inbox (validUser1).size ());
+        assertEquals (1, serverModel.get_Storage_Manager ().load_Inbox (validUser1).size ());
     }
 
     @Test
@@ -181,7 +181,7 @@ class ClientHandlerTest
         assertNotNull (res);
         assertTrue (res.message ().contains ("ERR"));
         assertTrue (res.message ().contains (invalidUser));
-        assertEquals (1, serverModel.get_Storage_manager ().load_Inbox (validUser1).size ());
+        assertEquals (1, serverModel.get_Storage_Manager ().load_Inbox (validUser1).size ());
     }
 
     @Test

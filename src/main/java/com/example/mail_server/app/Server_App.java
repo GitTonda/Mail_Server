@@ -11,6 +11,7 @@ import java.io.IOException;
 
 public class Server_App extends Application
 {
+    private static final String PATH = "/com/example/mail_server/server_gui.fxml";
     private Server_Model model;
 
     @Override
@@ -21,8 +22,7 @@ public class Server_App extends Application
         model.start_Server ();
 
         // GUI and Controller
-        FXMLLoader fxmlLoader = new FXMLLoader (
-                Server_App.class.getResource ("/com/example/mail_server/server_gui.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader (Server_App.class.getResource (PATH));
         Scene scene = new Scene (fxmlLoader.load (), 320, 240);
         Server_Controller controller = fxmlLoader.getController ();
         controller.set_model (model);

@@ -15,34 +15,35 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Storage_Manager
 {
     private static final String DATA_DIR = "server_data/";
-    private final ConcurrentHashMap <String, Object> user_Locks;
+    private final ConcurrentHashMap <String, Object> user_locks;
+    private final List <User> valid_users; // TODO modify this to be dynamic
     private final ObjectMapper mapper;
-    private final List <User> validUsers; // TODO modify this to be dynamic
 
     public Storage_Manager ()
     {
-        this.user_Locks = new ConcurrentHashMap <> ();
-        this.mapper = new ObjectMapper ();
-        this.mapper.registerModule (new JavaTimeModule ());
         new File (DATA_DIR).mkdirs ();
+        mapper = new ObjectMapper ();
+        mapper.registerModule (new JavaTimeModule ());
 
-        this.validUsers = List.of (
-                new User ("giorgio@mia.mail.com", "giorgio"),
-                new User ("mario@mia.mail.com", "mario"),
-                new User ("luigi@mia.mail.com", "luigi")
-        );
+        user_locks = new ConcurrentHashMap <> ();
+        valid_users = List.of
+                (
+                        new User ("mail1", "1"),
+                        new User ("mail2", "2"),
+                        new User ("mail3", "2")
+                );
     }
 
-    private Object get_Lock (String userEmail)
+    private Object get_Lock (String user_email)
     {
-        return user_Locks.computeIfAbsent (userEmail, _ -> new Object ());
+        return user_locks.computeIfAbsent (user_email, _ -> new Object ());
     }
 
-    public List <Email> load_Inbox (String userEmail)
+    public List <Email> load_Inbox (String user_email)
     {
-        synchronized (get_Lock (userEmail))
+        synchronized (get_Lock (user_email))
         {
-            File file = new File (DATA_DIR + userEmail + ".json");
+            File file = new File (DATA_DIR + user_email + ".json");
             if (! file.exists ()) return new ArrayList <> ();
 
             try
@@ -51,40 +52,40 @@ public class Storage_Manager
             }
             catch (IOException e)
             {
-                System.err.println ("Failed to read inbox for " + userEmail + ": " + e.getMessage ());
+                System.err.println ("Failed to read inbox for " + user_email + ": " + e.getMessage ());
                 return new ArrayList <> ();
             }
         }
     }
 
-    public void save_Inbox (String userEmail, List <Email> emails)
+    public void save_Inbox (String user_email, List <Email> emails)
     {
-        synchronized (get_Lock (userEmail))
+        synchronized (get_Lock (user_email))
         {
-            File file = new File (DATA_DIR + userEmail + ".json");
+            File file = new File (DATA_DIR + user_email + ".json");
             try
             {
                 mapper.writerWithDefaultPrettyPrinter ().writeValue (file, emails);
             }
             catch (IOException e)
             {
-                System.err.println ("Failed to save inbox for " + userEmail + ": " + e.getMessage ());
+                System.err.println ("Failed to save inbox for " + user_email + ": " + e.getMessage ());
             }
         }
     }
 
-    public void deliver_Email (String userEmail, Email newEmail)
+    public void deliver_Email (String user_email, Email new_email)
     {
-        synchronized (get_Lock (userEmail))
+        synchronized (get_Lock (user_email))
         {
-            List <Email> inbox = load_Inbox (userEmail);
-            inbox.add (newEmail);
-            save_Inbox (userEmail, inbox);
+            List <Email> inbox = load_Inbox (user_email);
+            inbox.add (new_email);
+            save_Inbox (user_email, inbox);
         }
     }
 
     public List <User> get_Users ()
     {
-        return validUsers;
+        return valid_users;
     }
 }
