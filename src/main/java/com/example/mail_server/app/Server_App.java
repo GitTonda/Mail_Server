@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class Server_App extends Application
 {
@@ -23,14 +24,18 @@ public class Server_App extends Application
 
         // GUI and Controller
         FXMLLoader fxmlLoader = new FXMLLoader (Server_App.class.getResource (PATH));
-        Scene scene = new Scene (fxmlLoader.load (), 320, 240);
+        Scene scene = new Scene (fxmlLoader.load (), 1000, 700);
+        scene.getStylesheets ().add (
+                Objects.requireNonNull (getClass ().getResource ("/com/example/mail_server/server_styles.css"))
+                        .toExternalForm ()
+        );
         Server_Controller controller = fxmlLoader.getController ();
         controller.set_model (model);
 
         // Show UI
         stage.setTitle ("Mail Server");
         stage.setScene (scene);
-        // stage.show (); // TODO uncomment this for GUI
+        stage.show ();
     }
 
     @Override

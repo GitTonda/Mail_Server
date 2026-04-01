@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class StorageManagerTest
 {
 
-    private final String user1 = "giorgio@mia.mail.com";
-    private final String user2 = "mario@mia.mail.com";
+    private final String user1 = "mail1";
+    private final String user2 = "mail2";
     private Storage_Manager storageManager;
 
     @BeforeEach
@@ -110,6 +110,6 @@ class StorageManagerTest
         List <User> users = storageManager.get_Users ();
         assertNotNull (users);
         assertFalse (users.isEmpty ());
-        assertTrue (users.stream ().anyMatch (u -> u.username ().equals ("giorgio@mia.mail.com")));
+        assertTrue (users.stream ().anyMatch (u -> u.username ().equals ("mail1")));
     }
 }

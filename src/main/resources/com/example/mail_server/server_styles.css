@@ -1,0 +1,118 @@
+/* ==============================================
+   FRESH GREY GLASSMORPHISM (SERVER THEME)
+   ============================================== */
+.root {
+    -fx-font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -fx-background-color: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
+}
+
+/* Hide default JavaFX focus rings globally */
+* {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* --- HEADER PILLS --- */
+.status-badge {
+    -fx-background-color: rgba(72, 187, 120, 0.2); /* Soft translucent green */
+    -fx-text-fill: #22543d;
+    -fx-padding: 8px 18px;
+    -fx-background-radius: 20px;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-border-color: rgba(72, 187, 120, 0.5);
+    -fx-border-radius: 20px;
+}
+
+/* --- DANGER BUTTON (Clear Logs) --- */
+.danger-button {
+    -fx-text-fill: #e53e3e;
+    -fx-background-color: rgba(254, 226, 226, 0.5);
+    -fx-border-color: rgba(254, 226, 226, 0.9);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(16, 42, 67, 0.08), 8, 0, 0, 4);
+}
+
+.danger-button:hover {
+    -fx-background-color: rgba(254, 226, 226, 0.8);
+    -fx-effect: dropshadow(gaussian, rgba(16, 42, 67, 0.12), 10, 0, 0, 5);
+}
+
+.danger-button:pressed {
+    -fx-background-color: rgba(254, 226, 226, 0.3);
+    -fx-effect: none;
+}
+
+/* ==============================================
+   SPLIT PANE STYLING
+   ============================================== */
+.glass-split-pane {
+    -fx-background-color: transparent;
+}
+
+.glass-split-pane *.split-pane-divider {
+    -fx-background-color: rgba(16, 42, 67, 0.1); /* Very subtle dark line */
+}
+
+/* ==============================================
+   GLASS TEXT AREA (The Console)
+   ============================================== */
+.glass-text-area {
+    /* Soft translucent glass background */
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: rgba(255, 255, 255, 0.8);
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+
+    /* Font settings for the console text */
+    -fx-text-fill: #102a43; /* Deep navy text for crisp reading */
+    -fx-font-family: 'Consolas', 'Courier New', monospace;
+    -fx-font-size: 14px;
+}
+
+/* Strip the white backgrounds from internal JavaFX layers */
+.glass-text-area .scroll-pane,
+.glass-text-area .scroll-pane .viewport,
+.glass-text-area .scroll-pane .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+/* ==============================================
+   CUSTOM MINIMAL SCROLLBARS
+   ============================================== */
+.glass-text-area .scroll-bar:vertical,
+.glass-text-area .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.glass-text-area .scroll-bar:vertical .track,
+.glass-text-area .scroll-bar:horizontal .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.glass-text-area .scroll-bar:vertical .thumb,
+.glass-text-area .scroll-bar:horizontal .thumb {
+    -fx-background-color: rgba(16, 42, 67, 0.2);
+    -fx-background-radius: 10px;
+}
+
+.glass-text-area .scroll-bar:vertical .thumb:hover,
+.glass-text-area .scroll-bar:horizontal .thumb:hover {
+    -fx-background-color: rgba(16, 42, 67, 0.4);
+}
+
+/* Hide the ugly scrollbar arrows */
+.glass-text-area .scroll-bar .increment-button,
+.glass-text-area .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-pref-height: 0px;
+    -fx-pref-width: 0px;
+}

@@ -179,7 +179,7 @@ class ClientHandlerTest
         Package res = sendRequestAndGetResponse (req);
 
         assertNotNull (res);
-        assertTrue (res.message ().contains ("ERR"));
+        assertTrue (res.message ().contains ("ERROR"));
         assertTrue (res.message ().contains (invalidUser));
         assertEquals (1, serverModel.get_Storage_Manager ().load_Inbox (validUser1).size ());
     }

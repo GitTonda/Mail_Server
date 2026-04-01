@@ -26,13 +26,14 @@ public class Server_Handler implements Runnable
         if (is_running) return;
         is_running = true;
 
-        model.append_Log ("[Server Started]");
+        model.append_log ("[Server Started]");
         try (ServerSocket serverSocket = new ServerSocket (PORT))
         {
             while (is_running)
             {
                 Socket clientSocket = serverSocket.accept ();
-                model.append_Log ("[Client Connected] : " + clientSocket.getInetAddress ());
+                String ip = clientSocket.getInetAddress ().getHostAddress ();
+                model.append_log (String.format ("[INFO]   %-12s Client Connected", "[" + ip + "]"));
                 thread_pool.execute (new Client_Handler (clientSocket, model));
             }
         }

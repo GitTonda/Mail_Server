@@ -84,6 +84,25 @@ public class Storage_Manager
         }
     }
 
+    /**
+     * Removes a specific email from a user's inbox and saves the updated list.
+     */
+    public boolean delete_Email (String username, Email email_to_delete)
+    {
+        List <Email> inbox = load_Inbox (username);
+
+        // Remove the email that has the exact same ID
+        boolean removed = inbox.removeIf (email -> email.id ().equals (email_to_delete.id ()));
+
+        if (removed)
+        {
+            // If we successfully found and removed it, save the new list back to the JSON file
+            save_Inbox (username, inbox);
+        }
+
+        return removed;
+    }
+
     public List <User> get_Users ()
     {
         return valid_users;
