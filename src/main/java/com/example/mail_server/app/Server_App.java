@@ -31,6 +31,10 @@ public class Server_App extends Application
         );
         Server_Controller controller = fxmlLoader.getController ();
         controller.set_model (model);
+        stage.setOnCloseRequest (_ -> {
+            javafx.application.Platform.exit ();
+            System.exit (0);
+        });
 
         // Show UI
         stage.setTitle ("Mail Server");

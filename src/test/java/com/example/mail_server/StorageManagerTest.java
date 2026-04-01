@@ -42,7 +42,7 @@ class StorageManagerTest
     @Test
     void testLoadNonExistentUser ()
     {
-        List <Email> inbox = storageManager.load_Inbox ("ghost@mia.mail.com");
+        List <Email> inbox = storageManager.load_inbox ("ghost@mia.mail.com");
         assertNotNull (inbox);
         assertTrue (inbox.isEmpty ());
     }
@@ -54,8 +54,8 @@ class StorageManagerTest
         User receiver = new User (user1, "pass");
         Email email = new Email ("1", sender, List.of (receiver), "S1", "T1", LocalDateTime.now ());
 
-        storageManager.deliver_Email (user1, email);
-        List <Email> inbox = storageManager.load_Inbox (user1);
+        storageManager.deliver_email (user1, email);
+        List <Email> inbox = storageManager.load_inbox (user1);
 
         assertEquals (1, inbox.size ());
         assertEquals ("1", inbox.getFirst ().id ());
@@ -70,9 +70,9 @@ class StorageManagerTest
         Email e1 = new Email ("1", sender, List.of (receiver), "S1", "T1", LocalDateTime.now ());
         Email e2 = new Email ("2", sender, List.of (receiver), "S2", "T2", LocalDateTime.now ());
 
-        storageManager.deliver_Email (user1, e1);
-        storageManager.deliver_Email (user1, e2);
-        List <Email> inbox = storageManager.load_Inbox (user1);
+        storageManager.deliver_email (user1, e1);
+        storageManager.deliver_email (user1, e2);
+        List <Email> inbox = storageManager.load_inbox (user1);
 
         assertEquals (2, inbox.size ());
         assertEquals ("1", inbox.get (0).id ());
@@ -93,21 +93,21 @@ class StorageManagerTest
             executor.submit (() -> {
                 Email email = new Email (UUID.randomUUID ().toString (), sender, List.of (receiver), "Subj", "Text",
                                          LocalDateTime.now ());
-                storageManager.deliver_Email (user1, email);
+                storageManager.deliver_email (user1, email);
                 latch.countDown ();
             });
         }
 
         latch.await ();
         executor.shutdown ();
-        List <Email> inbox = storageManager.load_Inbox (user1);
+        List <Email> inbox = storageManager.load_inbox (user1);
         assertEquals (threads, inbox.size ());
     }
 
     @Test
     void testGetUsersIsPopulated ()
     {
-        List <User> users = storageManager.get_Users ();
+        List <User> users = storageManager.get_users ();
         assertNotNull (users);
         assertFalse (users.isEmpty ());
         assertTrue (users.stream ().anyMatch (u -> u.username ().equals ("mail1")));

@@ -1,13 +1,11 @@
 package com.example.mail_server.model;
 
-import com.example.shared.data.Email;
+import com.example.shared.data.*;
 import com.example.shared.data.Package;
-import com.example.shared.data.TYPE;
-import com.example.shared.data.User;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +22,10 @@ public class Client_Handler implements Runnable
     {
         this.socket = socket;
         this.model = model;
-        storage = model.get_Storage_Manager ();
+        storage = model.get_storage_manager ();
     }
 
-    private Package handle_request (Package pkg) throws IOException
+    private Package handle_request (Package pkg)
     {
         return switch (pkg.type ())
         {
@@ -41,7 +39,7 @@ public class Client_Handler implements Runnable
     private Package check_credentials (Package pkg)
     {
         return new Package (LOGIN, null, null, null,
-                            storage.get_Users ().contains (pkg.user ()) ? "SUCCESS" : "FAILURE");
+                            storage.get_users ().contains (pkg.user ()) ? "SUCCESS" : "FAILURE");
     }
 
     private Package process_outgoing_email (Package pkg)
@@ -53,7 +51,7 @@ public class Client_Handler implements Runnable
             if (pkg.email_list () != null && ! pkg.email_list ().isEmpty ())
             {
                 Email original = pkg.email_list ().get (0);
-                String history = build_tamper_proof_history (pkg.type (), original);
+                String history = build_history (pkg.type (), original);
 
                 email_to_deliver = new Email (
                         email_to_deliver.id (),
@@ -68,14 +66,14 @@ public class Client_Handler implements Runnable
 
         String sender = email_to_deliver.sender ().username ();
         List <String> receivers = email_to_deliver.receivers ().stream ().map (User :: username).toList ();
-        List <String> valid_users = storage.get_Users ().stream ().map (User :: username).toList ();
+        List <String> valid_users = storage.get_users ().stream ().map (User :: username).toList ();
         StringBuilder error_msg = new StringBuilder ();
 
         for (String r : receivers)
         {
             if (valid_users.contains (r))
             {
-                storage.deliver_Email (r, email_to_deliver);
+                storage.deliver_email (r, email_to_deliver);
                 model.append_log (
                         String.format ("[ACTION] %-12s %s: Delivered to [%s]", "[" + sender + "]", pkg.type (), r));
             }
@@ -92,35 +90,27 @@ public class Client_Handler implements Runnable
         return new Package (pkg.type (), null, null, null, error_msg.isEmpty () ? "SUCCESS" : error_msg.toString ());
     }
 
-    // Helper method to format the quote block perfectly on the server
-    private String build_tamper_proof_history (TYPE type, Email original)
+    private String build_history (TYPE type, Email original)
     {
         String date_str = original.date ().toString ().replace ("T", " ").substring (0, 16);
-
-        // This regex trick adds a "> " to the beginning of EVERY line in the original text
-        // The "(?m)^" means "match the start of every new line"
         String quoted_body = original.text ().replaceAll ("(?m)^", "> ");
 
         if (type == ANSWER)
-        {
-            return "\n\nOn " + date_str + ", " + original.sender ().username () + " wrote:\n"
-                    + quoted_body;
-        }
+            return "\n\nOn " + date_str + ", " + original.sender ().username () + " wrote:\n" + quoted_body;
+
         else
-        { // FORWARD
             return "\n\n---------- Forwarded message ---------\n"
                     + "From: " + original.sender ().username () + "\n"
                     + "Date: " + date_str + "\n"
                     + "Subject: " + original.subject () + "\n\n"
                     + quoted_body;
-        }
     }
 
     private Package request_inbox (Package pkg)
     {
         String last_id = pkg.message ();
         String username = pkg.user ().username ();
-        List <Email> all_emails = storage.load_Inbox (username);
+        List <Email> all_emails = storage.load_inbox (username);
         List <Email> new_emails = new ArrayList <> ();
 
         if (last_id == null || last_id.isEmpty ()) new_emails = all_emails;
@@ -144,54 +134,52 @@ public class Client_Handler implements Runnable
     {
         if (pkg.user () == null || pkg.email () == null)
         {
-            model.append_log ("Failed to delete email: Missing user or email data in package.");
+            model.append_log (String.format ("[ERROR]  %-12s DELETE_EMAIL: Missing user or email data", "[UNKNOWN]"));
             return new Package (DELETE_EMAIL, null, null, null, "FAILURE: Invalid request");
         }
 
         String username = pkg.user ().username ();
         Email email_to_delete = pkg.email ();
 
-        // Tell the storage manager to remove it from the user's inbox file
-        boolean success = storage.delete_Email (username, email_to_delete);
-
+        boolean success = storage.delete_email (username, email_to_delete);
         if (success)
         {
-            model.append_log ("[" + username + "] deleted email: " + email_to_delete.subject ());
+            model.append_log (String.format ("[ACTION] %-12s DELETE_EMAIL: %s", "[" + username + "]",
+                                             email_to_delete.subject ()));
             return new Package (DELETE_EMAIL, null, null, null, "SUCCESS");
         }
         else
         {
-            model.append_log ("[" + username + "] failed to delete email (not found): " + email_to_delete.subject ());
+            model.append_log (String.format ("[ERROR]  %-12s DELETE_EMAIL: Not found - %s", "[" + username + "]",
+                                             email_to_delete.subject ()));
             return new Package (DELETE_EMAIL, null, null, null, "FAILURE: Email not found");
         }
     }
 
     @Override
-    public void run () // TODO reformat log output
+    public void run ()
     {
         model.increment_connections ();
         try (
-                ObjectOutputStream out = new ObjectOutputStream (socket.getOutputStream ());
-                ObjectInputStream in = new ObjectInputStream (socket.getInputStream ())
+                BufferedReader in = new BufferedReader (new InputStreamReader (socket.getInputStream ()));
+                PrintWriter out = new PrintWriter (socket.getOutputStream (), true)
         )
         {
-            Object in_obj = in.readObject ();
-            if (in_obj instanceof Package pkg)
+            String json_request = in.readLine ();
+            if (json_request != null)
             {
+                Package pkg = Json_Mapper.get ().readValue (json_request, Package.class);
                 String username = (pkg.user () != null) ? "[" + pkg.user ().username () + "]" : "[UNKNOWN]";
                 model.append_log (String.format ("[INFO]   %-12s Processing package: %s", username, pkg.type ()));
-                out.writeObject (handle_request (pkg));
-                out.flush ();
+                Package response_pkg = handle_request (pkg);
+                String json_response = Json_Mapper.get ().writeValueAsString (response_pkg);
+                out.println (json_response);
             }
-            else model.append_log ("Received unknown object format from client.");
+            else model.append_log (String.format ("[INFO]   %-12s A Client reconnected", "[SERVER]"));
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            model.append_log ("Communication error with client: " + e.getMessage ());
-        }
-        catch (ClassNotFoundException e)
-        {
-            model.append_log ("Failed to deserialize object: " + e.getMessage ());
+            model.append_log (String.format ("[ERROR]  %-12s Communication error: %s", "[SERVER]", e.getMessage ()));
         }
     }
 }

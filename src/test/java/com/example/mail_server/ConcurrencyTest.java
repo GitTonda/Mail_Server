@@ -51,12 +51,12 @@ class ConcurrencyTest
         User sender = new User ("mario@mia.mail.com", "pass");
         User receiver = new User (targetUser, "pass");
         Email initialEmail = new Email ("1", sender, List.of (receiver), "S", "T", LocalDateTime.now ());
-        storageManager.deliver_Email (targetUser, initialEmail);
+        storageManager.deliver_email (targetUser, initialEmail);
 
         for (int i = 0; i < threads; i++)
         {
             executor.submit (() -> {
-                List <Email> inbox = storageManager.load_Inbox (targetUser);
+                List <Email> inbox = storageManager.load_inbox (targetUser);
                 if (inbox != null && inbox.size () == 1)
                 {
                     successfulReads.incrementAndGet ();
@@ -86,7 +86,7 @@ class ConcurrencyTest
             executor.submit (() -> {
                 Email email = new Email (UUID.randomUUID ().toString (), sender, List.of (receiver), "W", "T",
                                          LocalDateTime.now ());
-                storageManager.deliver_Email (targetUser, email);
+                storageManager.deliver_email (targetUser, email);
                 latch.countDown ();
             });
         }
@@ -94,7 +94,7 @@ class ConcurrencyTest
         for (int i = 0; i < readThreads; i++)
         {
             executor.submit (() -> {
-                storageManager.load_Inbox (targetUser);
+                storageManager.load_inbox (targetUser);
                 latch.countDown ();
             });
         }
@@ -102,7 +102,7 @@ class ConcurrencyTest
         latch.await ();
         executor.shutdown ();
 
-        List <Email> finalInbox = storageManager.load_Inbox (targetUser);
+        List <Email> finalInbox = storageManager.load_inbox (targetUser);
         assertEquals (writeThreads, finalInbox.size ());
     }
 
@@ -122,14 +122,14 @@ class ConcurrencyTest
             executor.submit (() -> {
                 Email email = new Email (UUID.randomUUID ().toString (), sender, List.of (receiver1), "U1", "T",
                                          LocalDateTime.now ());
-                storageManager.deliver_Email (targetUser, email);
+                storageManager.deliver_email (targetUser, email);
                 latch.countDown ();
             });
 
             executor.submit (() -> {
                 Email email = new Email (UUID.randomUUID ().toString (), sender, List.of (receiver2), "U2", "T",
                                          LocalDateTime.now ());
-                storageManager.deliver_Email (secondUser, email);
+                storageManager.deliver_email (secondUser, email);
                 latch.countDown ();
             });
         }
@@ -137,7 +137,7 @@ class ConcurrencyTest
         latch.await ();
         executor.shutdown ();
 
-        assertEquals (threadsPerUser, storageManager.load_Inbox (targetUser).size ());
-        assertEquals (threadsPerUser, storageManager.load_Inbox (secondUser).size ());
+        assertEquals (threadsPerUser, storageManager.load_inbox (targetUser).size ());
+        assertEquals (threadsPerUser, storageManager.load_inbox (secondUser).size ());
     }
 }

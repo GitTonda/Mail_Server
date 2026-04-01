@@ -16,7 +16,7 @@ public class Storage_Manager
 {
     private static final String DATA_DIR = "server_data/";
     private final ConcurrentHashMap <String, Object> user_locks;
-    private final List <User> valid_users; // TODO modify this to be dynamic
+    private final List <User> valid_users;
     private final ObjectMapper mapper;
 
     public Storage_Manager ()
@@ -28,20 +28,16 @@ public class Storage_Manager
         user_locks = new ConcurrentHashMap <> ();
         valid_users = List.of
                 (
-                        new User ("mail1", "1"),
-                        new User ("mail2", "2"),
-                        new User ("mail3", "2")
+                        new User ("mail1@domain", "1"),
+                        new User ("mail2@domain", "2"),
+                        new User ("mail3@domain", "3"),
+                        new User ("mail4@domain", "4")
                 );
     }
 
-    private Object get_Lock (String user_email)
+    public List <Email> load_inbox (String user_email)
     {
-        return user_locks.computeIfAbsent (user_email, _ -> new Object ());
-    }
-
-    public List <Email> load_Inbox (String user_email)
-    {
-        synchronized (get_Lock (user_email))
+        synchronized (get_lock (user_email))
         {
             File file = new File (DATA_DIR + user_email + ".json");
             if (! file.exists ()) return new ArrayList <> ();
@@ -58,9 +54,9 @@ public class Storage_Manager
         }
     }
 
-    public void save_Inbox (String user_email, List <Email> emails)
+    public void save_inbox (String user_email, List <Email> emails)
     {
-        synchronized (get_Lock (user_email))
+        synchronized (get_lock (user_email))
         {
             File file = new File (DATA_DIR + user_email + ".json");
             try
@@ -74,36 +70,33 @@ public class Storage_Manager
         }
     }
 
-    public void deliver_Email (String user_email, Email new_email)
+    public void deliver_email (String user_email, Email new_email)
     {
-        synchronized (get_Lock (user_email))
+        synchronized (get_lock (user_email))
         {
-            List <Email> inbox = load_Inbox (user_email);
+            List <Email> inbox = load_inbox (user_email);
             inbox.add (new_email);
-            save_Inbox (user_email, inbox);
+            save_inbox (user_email, inbox);
         }
     }
 
-    /**
-     * Removes a specific email from a user's inbox and saves the updated list.
-     */
-    public boolean delete_Email (String username, Email email_to_delete)
+    public boolean delete_email (String username, Email email_to_delete)
     {
-        List <Email> inbox = load_Inbox (username);
-
-        // Remove the email that has the exact same ID
-        boolean removed = inbox.removeIf (email -> email.id ().equals (email_to_delete.id ()));
-
-        if (removed)
+        synchronized (get_lock (username))
         {
-            // If we successfully found and removed it, save the new list back to the JSON file
-            save_Inbox (username, inbox);
+            List <Email> inbox = load_inbox (username);
+            boolean removed = inbox.removeIf (email -> email.id ().equals (email_to_delete.id ()));
+            if (removed) save_inbox (username, inbox);
+            return removed;
         }
-
-        return removed;
     }
 
-    public List <User> get_Users ()
+    private Object get_lock (String user_email)
+    {
+        return user_locks.computeIfAbsent (user_email, _ -> new Object ());
+    }
+
+    public List <User> get_users ()
     {
         return valid_users;
     }
