@@ -30,6 +30,7 @@ public class Client_Handler implements Runnable
         return switch (pkg.type ())
         {
             case LOGIN -> check_credentials (pkg);
+            case REGISTER -> register_user (pkg);
             case REQUEST_INBOX -> request_inbox (pkg);
             case DELETE_EMAIL -> delete_email (pkg);
             case SEND_EMAIL, ANSWER, FORWARD -> process_outgoing_email (pkg);
@@ -153,6 +154,25 @@ public class Client_Handler implements Runnable
             model.append_log (String.format ("[ERROR]  %-12s DELETE_EMAIL: Not found - %s", "[" + username + "]",
                                              email_to_delete.subject ()));
             return new Package (DELETE_EMAIL, null, null, null, "FAILURE: Email not found");
+        }
+    }
+
+    private Package register_user (Package pkg)
+    {
+        User new_user = pkg.user ();
+        boolean success = storage.register_user (new_user);
+
+        if (success)
+        {
+            model.append_log (
+                    String.format ("[ACTION] %-12s Registered new account", "[" + new_user.username () + "]"));
+            return new Package (REGISTER, null, null, null, "SUCCESS");
+        }
+        else
+        {
+            model.append_log (String.format ("[ERROR]  %-12s Registration failed: Username taken",
+                                             "[" + new_user.username () + "]"));
+            return new Package (REGISTER, null, null, null, "FAILURE: Username already exists");
         }
     }
 

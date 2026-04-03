@@ -16,8 +16,9 @@ public class Storage_Manager
 {
     private static final String DATA_DIR = "server_data/";
     private final ConcurrentHashMap <String, Object> user_locks;
-    private final List <User> valid_users;
     private final ObjectMapper mapper;
+    private final File users_file;
+    private List <User> valid_users;
 
     public Storage_Manager ()
     {
@@ -26,13 +27,49 @@ public class Storage_Manager
         mapper.registerModule (new JavaTimeModule ());
 
         user_locks = new ConcurrentHashMap <> ();
-        valid_users = List.of
-                (
-                        new User ("mail1@domain", "1"),
-                        new User ("mail2@domain", "2"),
-                        new User ("mail3@domain", "3"),
-                        new User ("mail4@domain", "4")
-                );
+        users_file = new File (DATA_DIR + "users.json");
+
+        if (users_file.exists ())
+        {
+            try
+            {
+                valid_users = mapper.readValue (users_file, new com.fasterxml.jackson.core.type.TypeReference <> () {});
+            }
+            catch (IOException e)
+            {
+                valid_users = new ArrayList <> ();
+                System.err.println ("Failed to load users.json");
+            }
+        }
+        else
+        {
+            valid_users = new ArrayList <> ();
+            save_users ();
+        }
+    }
+
+    private synchronized void save_users ()
+    {
+        try
+        {
+            mapper.writerWithDefaultPrettyPrinter ().writeValue (users_file, valid_users);
+        }
+        catch (IOException e)
+        {
+            System.err.println ("Failed to save users.json: " + e.getMessage ());
+        }
+    }
+
+    public synchronized boolean register_user (User new_user)
+    {
+        boolean exists = valid_users.stream ().anyMatch (u -> u.username ().equals (new_user.username ()));
+        if (exists) return false;
+
+        save_inbox (new_user.username (), new ArrayList <> ());
+        valid_users.add (new_user);
+        save_users ();
+
+        return true;
     }
 
     public List <Email> load_inbox (String user_email)

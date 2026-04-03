@@ -3,9 +3,10 @@ package com.example.shared.data;
 public enum TYPE
 {
     LOGIN,
-    SEND_EMAIL,
+    REGISTER,
     REQUEST_INBOX,
-    DELETE_EMAIL,
+    SEND_EMAIL,
     ANSWER,
+    DELETE_EMAIL,
     FORWARD
 }
